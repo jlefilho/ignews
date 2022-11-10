@@ -24,6 +24,8 @@ export const config = {
 
 const relevantEvents = new Set([
     'checkout.session.completed',
+    'customer.subscription.updated',
+    'customer.subscription.deleted',
 ])
 
 // eslint-disable-next-line import/no-anonymous-default-export
@@ -51,9 +53,20 @@ export default async(req: NextApiRequest, res: NextApiResponse) => {
 
                         await saveSubscription(
                             checkoutSession.subscription.toString(),
-                            checkoutSession.customer.toString()
+                            checkoutSession.customer.toString(),
+                            true
                         )
-                        break 
+                        break
+                    case 'customer.subscription.updated':
+                    case 'customer.subscription.deleted':
+                        const subscription = event.data.object as Stripe.Subscription
+
+                        await saveSubscription(
+                            subscription.id,
+                            subscription.customer.toString(),
+                            false
+                        )
+                        break
                     default:
                         throw new Error('Unhandled event.')
                 }
